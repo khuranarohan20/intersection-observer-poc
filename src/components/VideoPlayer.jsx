@@ -3,8 +3,8 @@ import { imageSource, videoSource } from "../source";
 
 const VideoPlayer = () => {
   const [visibleVideos, setVisibleVideos] = useState(new Set());
-
   const videoRefs = useRef([]);
+  const videoCache = useRef(new Map());
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -45,22 +45,26 @@ const VideoPlayer = () => {
           index={i}
           visible={visibleVideos.has(i.toString())}
           ref={(el) => (videoRefs.current[i] = el)}
+          videoCache={videoCache}
         />
       ))}
     </div>
   );
 };
 
-const VideoElement = React.forwardRef(({ index, visible }, ref) => {
+const VideoElement = React.forwardRef(({ index, visible, videoCache }, ref) => {
   const [videoSourceLoaded, setVideoSourceLoaded] = useState(false);
 
   useEffect(() => {
     if (visible) {
-      setVideoSourceLoaded(true);
+      if (!videoCache.current.has(index)) {
+        videoCache.current.set(index, true);
+        setVideoSourceLoaded(true);
+      }
     } else {
       setVideoSourceLoaded(false);
     }
-  }, [visible]);
+  }, [visible, index, videoCache]);
 
   return (
     <div
